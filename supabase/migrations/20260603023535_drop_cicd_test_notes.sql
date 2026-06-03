@@ -1,0 +1,1 @@
+drop table if exists public.cicd_test_notes cascade;
