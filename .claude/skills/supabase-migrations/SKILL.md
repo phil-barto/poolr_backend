@@ -9,10 +9,11 @@ Migrations are the single source of truth. Never edit prod schema in Studio — 
 
 ## Authoring a migration
 
-1. Create `supabase/migrations/NNNN_<verb>_<subject>.sql` (zero-padded, sequential: `0003_add_invites.sql`). One logical change per file.
+1. create migrations with supabase migration new (migration name)
 2. Write **forward-only, idempotent-friendly** SQL. Prefer `create ... if not exists` / `create or replace` where safe.
 3. Apply locally and verify: `supabase db reset` (rebuilds from all migrations + `seed.sql`).
 4. Diff against the remote before shipping: `supabase db push` (runs in CI on merge; test against staging first).
+5. Always use RLS policies on these tables
 
 Migrations are forward-only in practice — to undo, write a new migration. Don't rewrite a migration that's already been pushed.
 
