@@ -31,4 +31,4 @@ Migrations are forward-only in practice — to undo, write a new migration. Don'
 
 - Enable RLS + grants → see [[supabase-add-table]].
 - Expose writes as functions → see [[supabase-add-rpc]].
-- Update frontend operations + run codegen → see [[graphql-codegen]].
+- Update frontend operations (`graphql/operations/`) + run `npm run codegen` → see [[graphql-codegen]].

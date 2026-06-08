@@ -24,4 +24,4 @@ grant execute on function public.<name>(<args>) to authenticated;
 - pg_graphql exposes it as a mutation field named after the function (camelCased).
 - For privileged work that must bypass RLS or call external APIs, use an Edge Function instead (see `supabase-edge-function`).
 
-Add the matching operation in the frontend's `GraphQL/Operations/` and re-run codegen.
+Add the matching operation in the frontend's `graphql/operations/` and run `npm run codegen`.

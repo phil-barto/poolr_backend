@@ -18,4 +18,4 @@ Copy `supabase/functions/redeem-invite/index.ts` as the template.
 
 Deploy: `supabase functions deploy <name>`. Set secrets with `supabase secrets set KEY=...`.
 
-Call from iOS via `SupabaseService.shared.client.functions.invoke(...)` (not Apollo).
+Call from the app via `supabase.functions.invoke(...)` (supabase-js, not Apollo).
