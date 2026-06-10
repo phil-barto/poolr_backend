@@ -19,8 +19,25 @@ major_version = 17
 enabled = true
 site_url = "http://127.0.0.1:3000"
 
-# Sign in with Apple — the app's primary auth. Secrets come from env, never git.
-[auth.external.apple]
+# Phone number is the user's identity in Poolr — SMS one-time codes, no password.
+[auth.sms]
+enable_signup = true
+enable_confirmations = true
+
+# The CLI only keeps the phone provider ON if some provider is enabled — test_otp
+# alone is not enough (you'd get phone_provider_disabled). So locally we enable
+# Twilio with DUMMY credentials. Nothing is ever sent: the test_otp numbers below
+# short-circuit before the provider is called. Real Twilio creds live in the
+# hosted project's Auth dashboard, not here.
+[auth.sms.twilio]
 enabled = true
-client_id = "env(SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID)"
-secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+account_sid = "dummy"
+message_service_sid = "dummy"
+auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
+
+# Local dev only: these numbers verify with the fixed code below WITHOUT sending a
+# real SMS, so the simulator flow is deterministic and free. Production SMS goes
+# through Twilio, configured in the hosted project's Auth dashboard. Keys are the
+# E.164 number without the leading "+".
+[auth.sms.test_otp]
+15555550100 = "123456"
