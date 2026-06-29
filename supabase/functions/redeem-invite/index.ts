@@ -11,8 +11,9 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { withSentry } from "../_shared/sentry.ts";
 
-Deno.serve(async (req) => {
+Deno.serve(withSentry(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
   }
 
   return json({ poolId }, 200);
-});
+}));
 
 // deno-lint-ignore no-explicit-any
 async function resolveInvite(_admin: any, _code: string): Promise<string | null> {
