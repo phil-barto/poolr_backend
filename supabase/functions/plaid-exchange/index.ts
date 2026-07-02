@@ -58,6 +58,19 @@ Deno.serve(withSentry(async (req) => {
     return json({ error: insertError.message }, 400);
   }
 
+  // Token stored — now record the onboarding step. Idempotent: relinking a second
+  // bank just no-ops on the (user_id, step) primary key. "Fully onboarded" is derived
+  // client-side from the recorded steps (see src/core/onboarding.ts).
+  const { error: stepError } = await adminClient
+    .from("onboarding_progress")
+    .upsert(
+      { user_id: user.id, step: "bank_linked" },
+      { onConflict: "user_id,step", ignoreDuplicates: true },
+    );
+  if (stepError) {
+    return json({ error: stepError.message }, 400);
+  }
+
   return json({ connectionId: row.id, status: row.status }, 200);
 }));
 
