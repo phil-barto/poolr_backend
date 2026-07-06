@@ -6,6 +6,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { withSentry } from "../_shared/sentry.ts";
 import { plaidFetch } from "../_shared/plaid.ts";
+import { type OnboardingStep } from "../_shared/onboarding.ts";
 
 Deno.serve(withSentry(async (req) => {
   if (req.method === "OPTIONS") {
@@ -58,14 +59,14 @@ Deno.serve(withSentry(async (req) => {
     return json({ error: insertError.message }, 400);
   }
 
-  // Token stored — now record the onboarding step. Idempotent: relinking a second
-  // bank just no-ops on the (user_id, step) primary key. "Fully onboarded" is derived
-  // client-side from the recorded steps (see src/core/onboarding.ts).
+  // Token stored — now record the onboarding step. Real upsert (not ignoreDuplicates)
+  // so an actual link flips a prior "skipped" row to honest completion. The gate
+  // (onboarding-status) derives the next step from these rows.
   const { error: stepError } = await adminClient
     .from("onboarding_progress")
     .upsert(
-      { user_id: user.id, step: "bank_linked" },
-      { onConflict: "user_id,step", ignoreDuplicates: true },
+      { user_id: user.id, step: "bank_linked" satisfies OnboardingStep, skipped: false },
+      { onConflict: "user_id,step" },
     );
   if (stepError) {
     return json({ error: stepError.message }, 400);
