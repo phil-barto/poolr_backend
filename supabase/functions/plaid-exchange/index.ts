@@ -2,32 +2,15 @@
 // long-lived access_token and stores the connection. The access_token is a server
 // credential: it is written with the service-role client and never returned.
 
-import { createClient } from "jsr:@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
-import { withSentry } from "../_shared/sentry.ts";
+import { requireUser, serviceClient } from "../_shared/auth.ts";
+import { json, serveFunction } from "../_shared/http.ts";
 import { plaidFetch } from "../_shared/plaid.ts";
 import { type OnboardingStep } from "../_shared/onboarding.ts";
 
-Deno.serve(withSentry(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return json({ error: "Missing Authorization header" }, 401);
-  }
-
-  const userClient = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } },
-  );
-
-  const { data: { user }, error: userError } = await userClient.auth.getUser();
-  if (userError || !user) {
-    return json({ error: "Invalid session" }, 401);
-  }
+serveFunction(async (req) => {
+  const auth = await requireUser(req);
+  if ("response" in auth) return auth.response;
+  const { user } = auth;
 
   const { publicToken } = await req.json().catch(() => ({}));
   if (!publicToken || typeof publicToken !== "string") {
@@ -38,10 +21,7 @@ Deno.serve(withSentry(async (req) => {
     public_token: publicToken,
   });
 
-  const adminClient = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const adminClient = serviceClient();
 
   const { data: row, error: insertError } = await adminClient
     .from("bank_connections")
@@ -73,11 +53,4 @@ Deno.serve(withSentry(async (req) => {
   }
 
   return json({ connectionId: row.id, status: row.status }, 200);
-}));
-
-function json(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
+});
